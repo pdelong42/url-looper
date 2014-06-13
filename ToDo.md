@@ -5,6 +5,5 @@
    - ...but only if we can establish a coherent use case for this;
  - log filename together with MD5, to disambiguate concurrent runs;
  - log URL together with status code;
- - put log files in a directory;
  - log to syslog instead of to a file;
  - put in a usage / help message;
