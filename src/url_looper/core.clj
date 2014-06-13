@@ -42,7 +42,7 @@
                (or
                   (= newmd5 oldmd5)
                   (spit filename body) ; footnote 1
-                  (log/info "new content written to " filename)  )
+                  (log/info "new content written to" filename "with an MD5 hash of" newmd5)  )
                (recur newmd5)  )  )  ]
       (inner-loop
          (digest/md5
