@@ -7,3 +7,4 @@
  - log URL together with status code;
  - log to syslog instead of to a file;
  - put in a usage / help message;
+ - adjust the log format so that it's more in-line with what gets thrown in syslog;
