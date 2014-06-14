@@ -32,18 +32,29 @@
    (letfn
       [  (inner-loop
             [oldmd5]
-            (log/info (format "md5 = %s" oldmd5))
             (Thread/sleep (* 1000 delta))
             (let
                [  {status :status body :body}
                   (http/get url)
                   newmd5 (digest/md5 body)  ]
-               (log/info (format "status = %s" status))
-               (or
-                  (= newmd5 oldmd5)
-                  (spit filename body) ; footnote 1
-                  (log/info "new content written to" filename "with an MD5 hash of" newmd5)  )
-               (recur newmd5)  )  )  ]
+               (recur
+                  (cond
+                     (not (= status 200))
+                     (do
+                        (log/info
+                           (format "invalid response from server (%s) - keeping last known good state" status)  )
+                        oldmd5  )
+                     (not (= newmd5 oldmd5))
+                     (do
+                        (spit filename body)
+                        (log/info
+                           (format "new content written to %s with an MD5 hash of %s" filename newmd5)  )
+                        newmd5  )
+                     :else
+                     (do
+                        (log/info (format "md5 = %s"    newmd5))
+                        (log/info (format "status = %s" status))
+                        newmd5  )  )  )  )  )  ]
       (inner-loop
          (digest/md5
             (try
