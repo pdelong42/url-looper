@@ -28,7 +28,8 @@
           :keys [arguments errors summary]  }  ]
    ;(if help   (usage 0 summary errors))
    ;(if errors (usage 1 summary errors))
-   (log/info (format "fetching %s every %s seconds and writing to %s" url delta filename))
+   (log/info (format "fetching %s every %s seconds" url delta))
+   (log/info (format "writing response changes to %s" filename))
    (letfn
       [  (inner-loop
             [oldmd5]
@@ -48,12 +49,11 @@
                      (do
                         (spit filename body)
                         (log/info
-                           (format "new content written to %s with an MD5 hash of %s" filename newmd5)  )
+                           (format "new repsonse written to %s with an MD5 hash of %s" filename newmd5)  )
                         newmd5  )
                      :else
                      (do
-                        (log/info (format "md5 = %s"    newmd5))
-                        (log/info (format "status = %s" status))
+                        (log/info (format "unchanged response from %s" url))
                         newmd5  )  )  )  )  )  ]
       (inner-loop
          (digest/md5
