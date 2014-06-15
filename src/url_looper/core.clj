@@ -39,22 +39,21 @@
                   (http/get url)
                   newmd5 (digest/md5 body)  ]
                (recur
-                  (cond
-                     (not (= status 200))
+                  (if
+                     (= status 200)
+                     (do
+                        (if
+                           (= newmd5 oldmd5)
+                           (log/info (format "unchanged response from %s" url))
+                           (do
+                              (spit filename body)
+                              (log/info
+                                 (format "new repsonse written to %s with an MD5 hash of %s" filename newmd5)  )  )  )
+                        newmd5  )
                      (do
                         (log/info
                            (format "invalid response from server (%s) - keeping last known good state" status)  )
-                        oldmd5  )
-                     (not (= newmd5 oldmd5))
-                     (do
-                        (spit filename body)
-                        (log/info
-                           (format "new repsonse written to %s with an MD5 hash of %s" filename newmd5)  )
-                        newmd5  )
-                     :else
-                     (do
-                        (log/info (format "unchanged response from %s" url))
-                        newmd5  )  )  )  )  )  ]
+                        oldmd5  )  )  )  )  )  ]
       (inner-loop
          (digest/md5
             (try
