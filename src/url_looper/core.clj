@@ -30,35 +30,33 @@
    ;(if errors (usage 1 summary errors))
    (log/info (format "fetching %s every %s seconds" url delta))
    (log/info (format "writing response changes to %s" filename))
-   (letfn
-      [  (inner-loop
-            [oldmd5]
-            (Thread/sleep (* 1000 delta))
-            (let
-               [  {status :status body :body}
-                  (http/get url)
-                  newmd5 (digest/md5 body)  ]
-               (recur
-                  (if
-                     (= status 200)
-                     (do
-                        (if
-                           (= newmd5 oldmd5)
-                           (log/info (format "unchanged response from %s" url))
-                           (do
-                              (spit filename body)
-                              (log/info
-                                 (format "new repsonse written to %s with an MD5 hash of %s" filename newmd5)  )  )  )
-                        newmd5  )
-                     (do
-                        (log/info
-                           (format "invalid response from server (%s) - keeping last known good state" status)  )
-                        oldmd5  )  )  )  )  )  ]
-      (inner-loop
+   (loop
+      [  oldmd5
          (digest/md5
             (try
                (slurp filename)
-               (catch java.io.FileNotFoundException foo "")  )  )  )  )  )
+               (catch java.io.FileNotFoundException foo "")  )  )  ]
+      (Thread/sleep (* 1000 delta))
+      (let
+         [  {status :status body :body}
+            (http/get url)
+            newmd5 (digest/md5 body)  ]
+         (recur
+            (if
+               (= status 200)
+               (do
+                  (if
+                     (= newmd5 oldmd5)
+                     (log/info (format "unchanged response from %s" url))
+                     (do
+                        (spit filename body)
+                        (log/info
+                           (format "new repsonse written to %s with an MD5 hash of %s" filename newmd5)  )  )  )
+                  newmd5  )
+               (do
+                  (log/info
+                     (format "invalid response from server (%s) - keeping last known good state" status)  )
+                  oldmd5  )  )  )  )  )  )
 
 (defn -main
    [& args]
