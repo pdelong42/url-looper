@@ -29,7 +29,7 @@
    ;(if help   (usage 0 summary errors))
    ;(if errors (usage 1 summary errors))
    (log/info (format "fetching %s every %s seconds" url delta))
-   (log/info (format "writing response changes to %s" filename))
+   (log/info (format "keeping state across runs in %s" filename))
    (loop
       [  oldmd5
          (digest/md5
@@ -47,11 +47,11 @@
                (do
                   (if
                      (= newmd5 oldmd5)
-                     (log/info (format "unchanged response from %s" url))
+                     (log/info (format "unchanged response returned by %s" url))
                      (do
                         (spit filename body)
                         (log/info
-                           (format "new repsonse written to %s with an MD5 hash of %s" filename newmd5)  )  )  )
+                           (format "different response returned by %s" url)  )  )  )
                   newmd5  )
                (do
                   (log/info
