@@ -40,8 +40,7 @@
           :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info (format "fetching %s every %s seconds" url delta))
-   (log/info (format "keeping state across runs in %s" filename))
+   (log/info (format "fetching %s every %s seconds, keeping state across runs in %s" url delta filename))
    (loop
       [  oldmd5
          (digest/md5
