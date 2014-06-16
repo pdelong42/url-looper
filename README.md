@@ -44,10 +44,11 @@ don't do it.
 program (that is, more than one JVM) can add to memory pressure pretty quickly
 on a host, perhaps I should add the ability to check more than one URL
 concurrently.  This would also be a good excuse to get practice writing
-multithreaded code in Clojure.
+multithreaded code in Clojure.  If I decided to go in this direction, a config
+file would probably be better - command-line args would get unwieldy fast.
 
 ## Usage
 
 FIXME: explanation
 
-    $ java -jar url-looper-0.1.0-standalone.jar [args]
+    $ java -jar url-looper-0.3.0-standalone.jar [args]
