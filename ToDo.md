@@ -4,7 +4,7 @@
  - add an option (-N) for specifying a Nagios command pipe to write to...;
    - ...but only if we can establish a coherent use case for this;
  - put in a usage / help message;
-   - [DONE] add a usage function, which auto-generates the options
+   - [X] add a usage function, which auto-generates the options
    - finish filling-in the usage message
  - adjust the log format so that it's more in-line with what gets thrown in syslog;
  - log to syslog instead of to a file;
