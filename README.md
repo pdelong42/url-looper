@@ -6,8 +6,8 @@ with other tools, like Splunk or Nagios.
 
 State is maintained by keeping an MD5 hash of the response in the memory of the
 running instance.  Persistence across runs is achieved by writing the response
-to a file on disk every any time the hash changes, and reading it in at the
-start of each run.
+to a file on disk any time the hash changes, and reading it in at the start of
+each run.
 
 This was written for two reasons: I wanted to scratch an itch - that is, I
 wanted to be able to monitor a service hosted for us by an external vendor; and
