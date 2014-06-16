@@ -36,6 +36,10 @@ another, if you're running more than one instance of this on the same host [1].
 The hash and filename may get logged again if I decide to add debug-level
 logging.
 
+The only thing left ambiguous is when one would have more than one instance of
+this checking the same URL.  But I can't think of a good use case for that, so
+don't do it.
+
 [1] Idea for a future feature: since running more than one instance of this
 program (that is, more than one JVM) can add to memory pressure pretty quickly
 on a host, perhaps I should add the ability to check more than one URL

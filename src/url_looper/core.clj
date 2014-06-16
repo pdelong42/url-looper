@@ -2,6 +2,7 @@
    (  :require
       [digest]
       [clj-http.client :as http]
+      [clojure.string    :refer [join]]
       [clojure.tools.cli :refer [parse-opts]]
       [clojure.tools.logging :as log]  )
    (:gen-class)  )
@@ -23,11 +24,22 @@
          "the URL to fetch"
          :default "http://localhost:8080/"  ]  ]  )
 
+(defn usage
+   [exit-code options-summary & [error-msg]]
+   (if error-msg (println error-msg "\n"))
+   (println
+      (join \newline
+         [  "usage: write me"
+            ""
+            "Options:"
+            options-summary  ]  )  )
+   (System/exit exit-code)  )
+
 (defn main-loop
    [  {  {:keys [delta filename help url]} :options
           :keys [arguments errors summary]  }  ]
-   ;(if help   (usage 0 summary errors))
-   ;(if errors (usage 1 summary errors))
+   (if help   (usage 0 summary errors))
+   (if errors (usage 1 summary errors))
    (log/info (format "fetching %s every %s seconds" url delta))
    (log/info (format "keeping state across runs in %s" filename))
    (loop
