@@ -1,4 +1,4 @@
-(defproject url-looper "0.2.0-SNAPSHOT"
+(defproject url-looper "0.3.0-SNAPSHOT"
    :dependencies
    [  [clj-http                  "0.9.2"]
       [digest                    "1.4.4"]
