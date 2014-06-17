@@ -11,3 +11,4 @@
  - find-out how to get environment variable settings, for the purposes of
    getting CWD and printing absolute path to output file (which should be in "./tmp");
  - write an init script;
+ - get it to stop treating self-signed certs as an error;
