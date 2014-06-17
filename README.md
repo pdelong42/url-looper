@@ -40,6 +40,12 @@ The only thing left ambiguous is when one would have more than one instance of
 this checking the same URL.  But I can't think of a good use case for that, so
 don't do it.
 
+I should write an init script for this - it's on the ToDo list.  However, I see
+no point in writing a watchdog process.  Your monitoring system *is* your
+watchdog process, and this code checks-in regularly even when everything is
+okay.  If the heartbeat disappears, then your monitoring should notice, or it's
+not doing its job.
+
 [1] Idea for a future feature: since running more than one instance of this
 program (that is, more than one JVM) can add to memory pressure pretty quickly
 on a host, perhaps I should add the ability to check more than one URL
