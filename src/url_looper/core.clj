@@ -72,10 +72,3 @@
 (defn -main
    [& args]
    (main-loop (parse-opts args cli-options))  )
-
-; Footnote 1:
-;
-; Since this always returns nil, the logging line following it will
-; always get run with it.  Yes, this is incredibly kludgey - I should
-; probably fix that.  I should also probably handle the exceptions
-; that can be spat out by spit.
