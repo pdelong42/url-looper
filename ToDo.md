@@ -10,3 +10,4 @@
  - log to syslog instead of to a file;
  - find-out how to get environment variable settings, for the purposes of
    getting CWD and printing absolute path to output file (which should be in "./tmp");
+ - write an init script;
