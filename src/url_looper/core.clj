@@ -50,7 +50,7 @@
       (Thread/sleep (* 1000 delta))
       (let
          [  {status :status body :body}
-            (http/get url)
+            (http/get url {:insecure? true})
             newmd5 (digest/md5 body)  ]
          (recur
             (if
