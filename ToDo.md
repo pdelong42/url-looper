@@ -1,4 +1,4 @@
- - [] handle the exceptions that can get thrown by "spit";
+ - [ ] handle the exceptions that can get thrown by "spit";
  - [X] consider the merits of writing the entire file to the log when it changes;
    - considered - I can't think of a good reason to do this;
  - [] add an option (-N) for specifying a Nagios command pipe to write to...;
