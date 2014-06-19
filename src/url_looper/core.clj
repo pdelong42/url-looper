@@ -43,14 +43,14 @@
    (log/info (format "fetching %s every %s seconds, keeping state across runs in %s" url delta filename))
    (loop
       [  oldmd5
-         (digest/md5
-            (try
-               (slurp filename)
-               (catch java.io.FileNotFoundException foo "")  )  )  ]
+            (digest/md5
+               (try
+                  (slurp filename)
+                  (catch java.io.FileNotFoundException foo "")  )  )  ]
       (Thread/sleep (* 1000 delta))
       (let
          [  {status :status body :body}
-            (http/get url {:insecure? true})
+               (http/get url {:insecure? true})
             newmd5 (digest/md5 body)  ]
          (recur
             (if
