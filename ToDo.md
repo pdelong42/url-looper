@@ -1,14 +1,14 @@
  - [ ] handle the exceptions that can get thrown by "spit";
  - [X] consider the merits of writing the entire file to the log when it changes;
    - considered - I can't think of a good reason to do this;
- - [] add an option (-N) for specifying a Nagios command pipe to write to...;
+ - [ ] add an option (-N) for specifying a Nagios command pipe to write to...;
    - ...but only if we can establish a coherent use case for this;
- - [] put in a usage / help message;
+ - [ ] put in a usage / help message;
    - [X] add a usage function, which auto-generates the options
-   - [] finish filling-in the usage message
- - [] adjust the log format so that it's more in-line with what gets thrown in syslog;
- - [] log to syslog instead of to a file;
- - [] find-out how to get environment variable settings, for the purposes of
+   - [ ] finish filling-in the usage message
+ - [ ] adjust the log format so that it's more in-line with what gets thrown in syslog;
+ - [ ] log to syslog instead of to a file;
+ - [ ] find-out how to get environment variable settings, for the purposes of
    getting CWD and printing absolute path to output file (which should be in "./tmp");
- - [] write an init script;
+ - [ ] write an init script;
  - [X] get it to stop treating self-signed certs as an error;
