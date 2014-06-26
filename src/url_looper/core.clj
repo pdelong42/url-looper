@@ -52,22 +52,21 @@
          [  {status :status body :body}
                (http/get url {:insecure? true})
             newmd5 (digest/md5 body)  ]
-         (recur
-            (if
-               (= status 200)
-               (do
-                  (if
-                     (= newmd5 oldmd5)
-                     (log/info (format "unchanged response returned by %s" url))
-                     (do
-                        (spit filename body)
-                        (log/debug (format "md5 = %s" newmd5))
-                        (log/info (format "different response returned by %s" url)  )  )  )
-                  newmd5  )
-               (do
-                  (log/info
-                     (format "invalid response from server (%s) - keeping last known good state" status)  )
-                  oldmd5  )  )  )  )  )  )
+         (if
+            (= status 200)
+            (do
+               (if
+                  (= newmd5 oldmd5)
+                  (log/info (format "unchanged response returned by %s" url))
+                  (do
+                     (spit filename body)
+                     (log/debug (format "md5 = %s" newmd5))
+                     (log/info (format "different response returned by %s" url)  )  )  )
+               (recur newmd5)  )
+            (do
+               (log/info
+                  (format "invalid response from server (%s) - keeping last known good state" status)  )
+               (recur oldmd5)  )  )  )  )  )
 
 (defn -main
    [& args]
