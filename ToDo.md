@@ -6,8 +6,8 @@
  - [ ] put in a usage / help message;
    - [X] add a usage function, which auto-generates the options
    - [ ] finish filling-in the usage message
- - [ ] adjust the log format so that it's more in-line with what gets thrown in syslog;
- - [ ] log to syslog instead of to a file;
+ - [X] adjust the log format so that it's more in-line with what gets thrown in syslog;
+ - [X] ~~log to syslog instead of to a file;~~ postponed indefinitely
  - [ ] find-out how to get environment variable settings, for the purposes of
    getting CWD and printing absolute path to output file (which should be in "./tmp");
  - [ ] write an init script;
