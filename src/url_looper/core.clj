@@ -60,7 +60,7 @@
                   (log/info (format "unchanged response returned by %s" url))
                   (do
                      (spit filename body)
-                     (log/debug (format "md5 = %s" newmd5))
+                     (log/debug (format "md5: %s -> %s" oldmd5 newmd5))
                      (log/info (format "different response returned by %s" url)  )  )  )
                (recur newmd5)  )
             (do
