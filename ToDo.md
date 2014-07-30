@@ -12,4 +12,4 @@
    getting CWD and printing absolute path to output file (which should be in "./tmp");
  - [ ] write an init script;
  - [X] get it to stop treating self-signed certs as an error;
- - [ ] deal with Exception in thread "main" java.net.ConnectException: Connection timed out
+ - [ ] handle java.net.ConnectException (connection timed-out);
