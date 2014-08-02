@@ -50,7 +50,7 @@
       (Thread/sleep (* 1000 delta))
       (let
          [  {status :status body :body}
-               (http/get url {:insecure? true})
+               (http/get url {:insecure? true :throw-exceptions false})
             newmd5 (digest/md5 body)  ]
          (if
             (= status 200)

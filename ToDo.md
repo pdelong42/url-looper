@@ -13,4 +13,5 @@
  - [ ] write an init script;
  - [X] get it to stop treating self-signed certs as an error;
  - [ ] handle java.net.ConnectException (connection timed-out);
- - [ ] handle 404;
+ - [X] handle 404;
+   - I cheated - I disabled exception throwing for clj-http/get;
