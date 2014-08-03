@@ -67,7 +67,7 @@
                (recur newmd5)  )
             (do
                (log/info
-                  (format "invalid response from server (%s) - keeping last known good state" status)  )
+                  (format "invalid response (%s) from %s - keeping last known good state" status url)  )
                (recur oldmd5)  )  )  )  )  )
 
 (defn -main
