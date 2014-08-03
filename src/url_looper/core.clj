@@ -50,7 +50,9 @@
       (Thread/sleep (* 1000 delta))
       (let
          [  {status :status body :body}
-               (http/get url {:insecure? true :throw-exceptions false})
+               (try
+                  (http/get url {:insecure? true :throw-exceptions false})
+                  (catch java.net.ConnectException foo "")  )
             newmd5 (digest/md5 body)  ]
          (if
             (= status 200)
