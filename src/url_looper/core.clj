@@ -50,7 +50,9 @@
       (Thread/sleep (* 1000 delta))
       (let
          [  {status :status body :body}
-               (http/get url {:insecure? true})
+               (try
+                  (http/get url {:insecure? true :throw-exceptions false})
+                  (catch java.net.ConnectException foo "")  )
             newmd5 (digest/md5 body)  ]
          (if
             (= status 200)
@@ -65,7 +67,7 @@
                (recur newmd5)  )
             (do
                (log/info
-                  (format "invalid response from server (%s) - keeping last known good state" status)  )
+                  (format "invalid response (%s) from %s - keeping last known good state" status url)  )
                (recur oldmd5)  )  )  )  )  )
 
 (defn -main
