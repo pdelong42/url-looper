@@ -35,12 +35,25 @@
             options-summary  ]  )  )
    (System/exit exit-code)  )
 
+(defn http-get
+   [url]
+   (let
+      [  before (System/nanoTime)
+         after #(System/nanoTime)  ]
+      (let
+         [  {status :status body :body}
+               (try
+                  (http/get url {:insecure? true :throw-exceptions false})
+                  (catch java.net.ConnectException foo "")  )  ]
+         [  status body (/ (- (after) before) 1e6)  ]  )  )  )
+
 (defn main-loop
    [  {  {:keys [delta filename help url]} :options
           :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info (format "fetching %s every %s seconds, keeping state across runs in %s" url delta filename))
+   (log/info
+      (format "fetching %s every %s seconds, keeping state across runs in %s" url delta filename)  )
    (loop
       [  oldmd5
             (digest/md5
@@ -49,25 +62,24 @@
                   (catch java.io.FileNotFoundException foo "")  )  )  ]
       (Thread/sleep (* 1000 delta))
       (let
-         [  {status :status body :body}
-               (try
-                  (http/get url {:insecure? true :throw-exceptions false})
-                  (catch java.net.ConnectException foo "")  )
-            newmd5 (digest/md5 body)  ]
+         [  [status body duration]
+               (http-get url)
+            newmd5 (digest/md5 body)
+            message (format "response returned by %s in %s ms" url duration)  ]
          (if
             (= status 200)
             (do
                (if
                   (= newmd5 oldmd5)
-                  (log/info (format "unchanged response returned by %s" url))
+                  (log/info (format "unchanged %s" message))
                   (do
                      (spit filename body)
                      (log/debug (format "md5: %s -> %s" oldmd5 newmd5))
-                     (log/info (format "different response returned by %s" url)  )  )  )
+                     (log/info (format "different %s" message)  )  )  )
                (recur newmd5)  )
             (do
                (log/info
-                  (format "invalid response (%s) from %s - keeping last known good state" status url)  )
+                  (format "invalid (%s) %s - keeping last known good state" status message)  )
                (recur oldmd5)  )  )  )  )  )
 
 (defn -main
