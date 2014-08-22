@@ -47,6 +47,20 @@
                   (catch java.net.ConnectException foo "")  )  ]
          [  status body (/ (- (after) before) 1e6)  ]  )  )  )
 
+; These two functions are just placeholders at the moment.  The plan
+; is to have them convert between filename and associative array, but
+; it's obviously not that far along yet.
+
+(defn load-state
+   [filename]
+   (try
+      (slurp filename)
+      (catch java.io.FileNotFoundException foo "")  )  )
+
+(defn save-state
+   [string]
+   (spit filename string)  )
+
 (defn main-loop
    [  {  {:keys [delta filename help url]} :options
           :keys [arguments errors summary]  }  ]
