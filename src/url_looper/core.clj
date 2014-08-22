@@ -58,7 +58,7 @@
       (catch java.io.FileNotFoundException foo "")  )  )
 
 (defn save-state
-   [string]
+   [filename string]
    (spit filename string)  )
 
 (defn main-loop
