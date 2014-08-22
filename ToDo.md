@@ -16,3 +16,5 @@
  - [X] handle 404;
    - I cheated - I disabled exception throwing for clj-http/get;
  - [ ] document possible outputs for the usage of external tool (e.g., Splunk);
+ - [ ] change the output filename to be based on MD5 hash, and use an
+       accompanying index file to map URLs to their latest MD5;
