@@ -2,7 +2,7 @@
    (  :require
       [digest]
       [clj-http.client :as http]
-      [clojure.string    :refer [join]]
+      [clojure.string    :refer [join split split-lines]]
       [clojure.tools.cli :refer [parse-opts]]
       [clojure.tools.logging :as log]  )
    (:gen-class)  )
@@ -15,14 +15,18 @@
          :validate [integer? "not an integer"]
          :default 60  ]
       [  "-f"
-         "--filename FILENAME"
+         "--filename PATH"
          "the filename to write to"
          :default "output.txt"  ]
-      [  "-h" "--help" "help"  ]
+      [  "-s"
+         "--state PATH"
+         "the directory in which to keep state"
+         :default "log"  ]
       [  "-u"
          "--url URL"
          "the URL to fetch"
-         :default "http://localhost:8080/"  ]  ]  )
+         :default "http://localhost:8080/"  ]
+      [  "-h" "--help" "help"  ]  ]  )
 
 (defn usage
    [exit-code options-summary & [error-msg]]
@@ -47,37 +51,37 @@
                   (catch java.net.ConnectException foo "")  )  ]
          [  status body (/ (- (after) before) 1e6)  ]  )  )  )
 
-; These two functions are just placeholders at the moment.  The plan
-; is to have them convert between filename and associative array, but
-; it's obviously not that far along yet.
-
-(defn load-state
-   [filename]
+(defn load-index
+   [directory]
    (try
-      (slurp filename)
-      (catch java.io.FileNotFoundException foo "")  )  )
+      (into
+         {}
+         (map
+           #(vec (reverse (split % #"\s+" 2)))
+            (split-lines (slurp (str directory "/index.txt")))  )  )
+      (catch java.io.FileNotFoundException foo {})
+      (catch      IllegalArgumentException foo {})  )  )
 
-(defn save-state
-   [filename string]
-   (spit filename string)  )
+(defn save-index
+   [directory index]
+   (spit
+      (str directory "/index.txt")
+      (join (sort (map #(str (join " " (reverse %)) "\n") index)))  )  )
 
 (defn main-loop
-   [  {  {:keys [delta filename help url]} :options
+   [  {  {:keys [delta state filename help url]} :options
           :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
    (log/info
       (format "fetching %s every %s seconds, keeping state across runs in %s" url delta filename)  )
    (loop
-      [  oldmd5
-            (digest/md5
-               (try
-                  (slurp filename)
-                  (catch java.io.FileNotFoundException foo "")  )  )  ]
+      [  index (load-index state)  ]
       (Thread/sleep (* 1000 delta))
       (let
          [  [status body duration]
                (http-get url)
+            oldmd5 (get index url)
             newmd5 (digest/md5 body)
             message (format "response returned by %s in %s ms" url duration)  ]
          (if
@@ -85,16 +89,20 @@
             (do
                (if
                   (= newmd5 oldmd5)
-                  (log/info (format "unchanged %s" message))
                   (do
+                     (log/info (format "unchanged %s" message))
+                     (recur index)  )
+                  (let
+                     [  new-index (assoc index url newmd5)  ]
                      (spit filename body)
+                     (save-index state new-index)
                      (log/debug (format "md5: %s -> %s" oldmd5 newmd5))
-                     (log/info (format "different %s" message)  )  )  )
-               (recur newmd5)  )
+                     (log/info (format "different %s" message))
+                     (recur new-index)  )  )  )
             (do
                (log/info
                   (format "invalid (%s) %s - keeping last known good state" status message)  )
-               (recur oldmd5)  )  )  )  )  )
+               (recur index)  )  )  )  )  )
 
 (defn -main
    [& args]
