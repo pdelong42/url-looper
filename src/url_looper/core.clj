@@ -14,10 +14,6 @@
          :parse-fn #(Integer/parseInt %)
          :validate [integer? "not an integer"]
          :default 60  ]
-      [  "-f"
-         "--filename PATH"
-         "the filename to write to"
-         :default "output.txt"  ]
       [  "-s"
          "--state PATH"
          "the directory in which to keep state"
@@ -69,12 +65,12 @@
       (join (sort (map #(str (join " " (reverse %)) "\n") index)))  )  )
 
 (defn main-loop
-   [  {  {:keys [delta state filename help url]} :options
-          :keys [arguments errors summary]  }  ]
+   [  {  {  :keys [delta state help url]  } :options
+         :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
    (log/info
-      (format "fetching %s every %s seconds, keeping state across runs in %s" url delta filename)  )
+      (format "fetching %s every %s seconds, keeping state across runs in %s" url delta state)  )
    (loop
       [  index (load-index state)  ]
       (Thread/sleep (* 1000 delta))
@@ -94,9 +90,9 @@
                      (recur index)  )
                   (let
                      [  new-index (assoc index url newmd5)  ]
-                     (spit filename body)
+                     (spit (str state "/" newmd5 ".out") body)
                      (save-index state new-index)
-                     (log/debug (format "md5: %s -> %s" oldmd5 newmd5))
+                     (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                      (log/info (format "different %s" message))
                      (recur new-index)  )  )  )
             (do
