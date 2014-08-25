@@ -9,7 +9,8 @@
  - [X] adjust the log format so that it's more in-line with what gets thrown in syslog;
  - [X] ~~log to syslog instead of to a file;~~ postponed indefinitely
  - [ ] find-out how to get environment variable settings, for the purposes of
-   getting CWD and printing absolute path to output file (which should be in "./tmp");
+       getting CWD and printing absolute path to output file (which should be
+       in "./tmp");
  - [ ] write an init script;
  - [X] get it to stop treating self-signed certs as an error;
  - [X] handle java.net.ConnectException (connection timed-out);
@@ -18,3 +19,6 @@
  - [ ] document possible outputs for the usage of external tool (e.g., Splunk);
  - [X] change the output filename to be based on MD5 hash, and use an
        accompanying index file to map URLs to their latest MD5;
+ - [ ] work-out what it takes to use the `index.txt` file as a persistent
+       configuration state across runs, while still honoring the command-line
+       flags and their defaults in an intelligible way;
