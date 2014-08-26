@@ -45,7 +45,11 @@
                (try
                   (http/get url {:insecure? true :throw-exceptions false})
                   (catch java.net.ConnectException foo "")  )  ]
-         [  status body (/ (- (after) before) 1e6)  ]  )  )  )
+         (let
+            [  duration (/ (- (after) before) 1e6)
+               message
+                  (format "response returned by %s in %s ms" url duration)  ]
+            [  status body message  ]  )  )  )  )
 
 (defn load-index
    [directory]
@@ -70,19 +74,24 @@
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
    (log/info
-      (format "fetching %s every %s seconds, keeping state across runs in %s" url delta state)  )
+      (format
+         "fetching %s every %s seconds, keeping state across runs in %s"
+         url delta state  )  )
    (loop
       [  index (load-index state)  ]
       (Thread/sleep (* 1000 delta))
       (let
-         [  [status body duration]
-               (http-get url)
-            oldmd5 (get index url)
-            newmd5 (digest/md5 body)
-            message (format "response returned by %s in %s ms" url duration)  ]
+         [  [status body message] (http-get url)  ]
          (if
-            (= status 200)
+            (not (= status 200))
             (do
+               (log/info
+                  (format
+                     "invalid (%s) %s - keeping last known good state"
+                     status message  )  )
+               (recur index)  )
+            (let
+               [  oldmd5 (get index url) newmd5 (digest/md5 body)  ]
                (if
                   (= newmd5 oldmd5)
                   (do
@@ -94,11 +103,7 @@
                      (save-index state new-index)
                      (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                      (log/info (format "different %s" message))
-                     (recur new-index)  )  )  )
-            (do
-               (log/info
-                  (format "invalid (%s) %s - keeping last known good state" status message)  )
-               (recur index)  )  )  )  )  )
+                     (recur new-index)  )  )  )  )  )  )  )
 
 (defn -main
    [& args]
