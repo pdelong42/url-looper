@@ -35,7 +35,7 @@
             options-summary  ]  )  )
    (System/exit exit-code)  )
 
-(defn http-get
+(defn http-get ; footnote 1
    [url]
    (let
       [  before (System/nanoTime)
@@ -51,7 +51,7 @@
                   (format "response returned by %s in %s ms" url duration)  ]
             [  status body message  ]  )  )  )  )
 
-(defn load-index
+(defn load-index ; footnote 2
    [directory]
    (try
       (into
@@ -62,7 +62,7 @@
       (catch java.io.FileNotFoundException foo {})
       (catch      IllegalArgumentException foo {})  )  )
 
-(defn save-index
+(defn save-index ; footnote 2
    [directory index]
    (spit
       (str directory "/index.txt")
@@ -108,3 +108,20 @@
 (defn -main
    [& args]
    (main-loop (parse-opts args cli-options))  )
+
+; Footnote 1;
+;
+; I probably don't need to do this as a series of cascading lets, but
+; I want to be sure the order of the bindings happens in the right
+; order, and I don't know whether let preserves the order.
+; Regardless, I should factor out the timing code and redo it as a
+; higher-order function, which I use to wrap the http-get.  I'll put
+; it on the todo list...
+;
+; Footnote 2:
+;
+; Instead of passing in the directory argument each time, I should
+; pass it in to a partially evaluated function, which I create at the
+; beginning of the flow of execution.  Then evoke the partially
+; evaluated function each time, with the rest of the args.  Another
+; todo item...
