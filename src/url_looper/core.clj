@@ -1,5 +1,5 @@
 (ns url-looper.core
-   (  :require
+   (:require
       [digest]
       [clj-http.client]
       [clojure.string    :refer [join split split-lines]]
