@@ -1,7 +1,7 @@
 (ns url-looper.core
    (  :require
       [digest]
-      [clj-http.client :as http]
+      [clj-http.client]
       [clojure.string    :refer [join split split-lines]]
       [clojure.tools.cli :refer [parse-opts]]
       [clojure.tools.logging :as log]  )
@@ -43,7 +43,8 @@
       (let
          [  {status :status body :body}
                (try
-                  (http/get url {:insecure? true :throw-exceptions false})
+                  (clj-http.client/get url
+                     {:insecure? true :throw-exceptions false}  )
                   (catch java.net.ConnectException foo "")  )  ]
          (let
             [  duration (/ (- (after) before) 1e6)
