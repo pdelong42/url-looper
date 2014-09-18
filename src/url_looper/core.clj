@@ -45,7 +45,8 @@
                (try
                   (clj-http.client/get url
                      {:insecure? true :throw-exceptions false}  )
-                  (catch java.net.ConnectException foo "")  )  ]
+                  (catch java.net.ConnectException foo
+                     {:status "client connection failure" :body ""}  )  )  ]
          (let
             [  duration (/ (- (after) before) 1e6)
                message
