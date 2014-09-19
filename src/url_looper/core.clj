@@ -113,7 +113,7 @@
    [& args]
    (main-loop (parse-opts args cli-options))  )
 
-; Footnote 1;
+; Footnote 1:
 ;
 ; I probably don't need to do this as a series of cascading lets, but
 ; I want to be sure the order of the bindings happens in the right
