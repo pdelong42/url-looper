@@ -34,7 +34,7 @@ useful pieces of information from the point-of-view of a log-processing tool
 (e.g., Splunk).  I figure the URL is unique enough to disambiguate one run from
 another, if you're running more than one instance of this on the same host [1].
 The hash and filename may get logged again if I decide to add debug-level
-logging.
+logging.  Update: it's now getting logged at debug-level.
 
 The only thing left ambiguous is when one would have more than one instance of
 this checking the same URL.  But I can't think of a good use case for that, so
@@ -55,6 +55,4 @@ file would probably be better - command-line args would get unwieldy fast.
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar url-looper-0.3.0-standalone.jar [args]
+    $ java -jar url-looper-X.Y.Z-standalone.jar -h
