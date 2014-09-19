@@ -29,9 +29,11 @@
    (if error-msg (println error-msg "\n"))
    (println
       (join \newline
-         [  "usage: write me"
+         [  "Usage:"
             ""
-            "Options:"
+            "   java -jar url-looper-X.Y.Z-standalone.jar -options..."
+            ""
+            "Options: (with defaults indicated)"
             options-summary  ]  )  )
    (System/exit exit-code)  )
 
