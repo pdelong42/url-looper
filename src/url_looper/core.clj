@@ -47,8 +47,8 @@
                (try
                   (clj-http.client/get url
                      {  :insecure? true
-                        :socket-timeout 1000
-                        :conn-timeout   1000
+                        :socket-timeout 10000
+                        :conn-timeout    1000
                         :throw-exceptions false  }  )
                   (catch java.net.ConnectException e
                      {:body "" :status "connection failed"}  )
