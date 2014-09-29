@@ -46,9 +46,16 @@
          [  {status :status body :body}
                (try
                   (clj-http.client/get url
-                     {:insecure? true :throw-exceptions false}  )
-                  (catch java.net.ConnectException foo
-                     {:status "client connection failure" :body ""}  )  )  ]
+                     {  :insecure? true
+                        :socket-timeout 1000
+                        :conn-timeout   1000
+                        :throw-exceptions false  }  )
+                  (catch java.net.ConnectException e
+                     {:body "" :status "connection failed"}  )
+                  (catch java.net.SocketTimeoutException e
+                     {:body "" :status "socket timed-out"}  )
+                  (catch org.apache.http.conn.ConnectTimeoutException e
+                     {:body "" :status "connection timed-out"}  )  )  ]
          (let
             [  duration (/ (- (after) before) 1e6)
                message
@@ -63,8 +70,8 @@
          (map
            #(vec (reverse (split % #"\s+" 2)))
             (split-lines (slurp (str directory "/index.txt")))  )  )
-      (catch java.io.FileNotFoundException foo {})
-      (catch      IllegalArgumentException foo {})  )  )
+      (catch java.io.FileNotFoundException e {})
+      (catch      IllegalArgumentException e {})  )  )
 
 (defn save-index ; footnote 2
    [directory index]
