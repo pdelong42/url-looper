@@ -106,9 +106,7 @@
                      [  oldmd5 (get index url) newmd5 (digest/md5 body)  ]
                      (if
                         (= newmd5 oldmd5)
-                        (do
-                           (log/info (format "unchanged %s" message))
-                           index  )
+                        (do (log/info (format "unchanged %s" message)) index)
                         (let
                            [  new-index (assoc index url newmd5)  ]
                            (spit (str state "/" newmd5 ".out") body)
@@ -117,7 +115,8 @@
                            (log/info (format "different %s" message))
                            new-index  )  )  )  )  )  )  ]
       (loop
-         [  index (load-index state) milliseconds (* 1000 delta)  ]
+         [  index (load-index state)
+            milliseconds (* 1000 delta)  ]
          (recur (fetch-and-compare index milliseconds) milliseconds)  )  )  )
 
 (defn -main
@@ -130,8 +129,8 @@
 ; I want to be sure the order of the bindings happens in the right
 ; order, and I don't know whether let preserves the order.
 ; Regardless, I should factor out the timing code and redo it as a
-; higher-order function, which I use to wrap the http-get.  I'll put
-; it on the todo list...
+; higher-order function (or a macro), which I use to wrap the
+; http-get.  I'll put it on the todo list...
 ;
 ; Footnote 2:
 ;
