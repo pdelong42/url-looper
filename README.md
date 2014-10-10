@@ -27,7 +27,7 @@ feel like writing the extra logic to handle redirects (though I suppose that I
 should, in the interests of my secondary goal, of getting more practice writing
 Clojure).  I figure that if you're checking a URL for changes, then you've
 already traced through all the redirects, and only care about the final
-endpoint.
+endpoint.  Update: I think clj-http may follow redirects by default anyway.
 
 I stopped logging the MD5 hash and the filename, because those aren't really
 useful pieces of information from the point-of-view of a log-processing tool

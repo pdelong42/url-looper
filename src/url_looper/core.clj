@@ -88,33 +88,37 @@
       (format
          "fetching %s every %s seconds, keeping state across runs in %s"
          url delta state  )  )
-   (loop
-      [  index (load-index state)  ]
-      (Thread/sleep (* 1000 delta))
-      (let
-         [  [status body message] (http-get url)  ]
-         (if
-            (not (= status 200))
-            (do
-               (log/info
-                  (format
-                     "invalid (%s) %s - keeping last known good state"
-                     status message  )  )
-               (recur index)  )
+   (letfn
+      [  (fetch-and-compare
+            [index milliseconds]
+;            (Thread/sleep milliseconds)
             (let
-               [  oldmd5 (get index url) newmd5 (digest/md5 body)  ]
+               [  [status body message] (http-get url)  ]
                (if
-                  (= newmd5 oldmd5)
+                  (not (= status 200))
                   (do
-                     (log/info (format "unchanged %s" message))
-                     (recur index)  )
+                     (log/info
+                        (format
+                           "invalid (%s) %s - keeping last known good state"
+                           status message  )  )
+                     index  )
                   (let
-                     [  new-index (assoc index url newmd5)  ]
-                     (spit (str state "/" newmd5 ".out") body)
-                     (save-index state new-index)
-                     (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
-                     (log/info (format "different %s" message))
-                     (recur new-index)  )  )  )  )  )  )  )
+                     [  oldmd5 (get index url) newmd5 (digest/md5 body)  ]
+                     (if
+                        (= newmd5 oldmd5)
+                        (do
+                           (log/info (format "unchanged %s" message))
+                           index  )
+                        (let
+                           [  new-index (assoc index url newmd5)  ]
+                           (spit (str state "/" newmd5 ".out") body)
+                           (save-index state new-index)
+                           (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
+                           (log/info (format "different %s" message))
+                           new-index  )  )  )  )  )  )  ]
+      (loop
+         [  index (load-index state) milliseconds (* 1000 delta)  ]
+         (recur (fetch-and-compare index milliseconds) milliseconds)  )  )  )
 
 (defn -main
    [& args]
