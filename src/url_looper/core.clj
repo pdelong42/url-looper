@@ -91,7 +91,7 @@
    (letfn
       [  (fetch-and-compare
             [index milliseconds]
-;            (Thread/sleep milliseconds)
+            (Thread/sleep milliseconds)
             (let
                [  [status body message] (http-get url)  ]
                (if
