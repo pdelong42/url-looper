@@ -39,33 +39,29 @@
 
 (defmacro timer-wrapper
    [block]
-   `(let
-      [  before# (System/nanoTime)  ]
-      (let
-         [  ret# ~block  ]
-         [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )  )
+  `(let
+      [  before# (System/nanoTime) ret# ~block  ]
+      [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )
 
-(defn http-get ; footnote 1
+(defn http-get
    [url]
    (let
       [  [  duration {status :status body :body}  ]
-            (timer-wrapper
-               (try
-                  (clj-http.client/get url
-                     {  :insecure? true
-                        :socket-timeout 10000
-                        :conn-timeout    1000
-                        :throw-exceptions false  }  )
-                  (catch                    java.net.ConnectException e
-                     {:body "" :status "connection failed"}  )
-                  (catch              java.net.SocketTimeoutException e
-                     {:body "" :status "socket timed-out"}  )
-                  (catch org.apache.http.conn.ConnectTimeoutException e
-                     {:body "" :status "connection timed-out"}  )  )  )  ]
-      (let
-         [  message
-               (format "response returned by %s in %s ms" url duration)  ]
-         [  status body message  ]  )  )  )
+         (timer-wrapper
+            (try
+               (clj-http.client/get url
+                  {  :insecure? true
+                     :socket-timeout 10000
+                     :conn-timeout    1000
+                     :throw-exceptions false  }  )
+               (catch                    java.net.ConnectException e
+                  {:body "" :status "connection failed"}  )
+               (catch              java.net.SocketTimeoutException e
+                  {:body "" :status "socket timed-out"}  )
+               (catch org.apache.http.conn.ConnectTimeoutException e
+                  {:body "" :status "connection timed-out"}  )  )  )
+         message (format "response returned by %s in %s ms" url duration)  ]
+      [  status body message  ]  )  )
 
 (defn load-index ; footnote 2
    [state]
@@ -128,12 +124,7 @@
 
 ; Footnote 1:
 ;
-; I probably don't need to do this as a series of cascading lets, but
-; I want to be sure the order of the bindings happens in the right
-; order, and I don't know whether let preserves the order.
-; Regardless, I should factor out the timing code and redo it as a
-; higher-order function (or a macro), which I use to wrap the
-; http-get.  I'll put it on the todo list...
+; (placeholder)
 ;
 ; Footnote 2:
 ;
