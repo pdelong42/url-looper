@@ -26,3 +26,5 @@
        configuration state across runs, while still honoring the command-line
        flags and their defaults in an intelligible way;
  - [ ] revamp the logging framework to use something more flexible;
+ - [ ] find-out why :request-time is so much smaller than the measured time (is
+       the overhead really that high?);
