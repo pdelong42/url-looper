@@ -37,6 +37,14 @@
             options-summary  ]  )  )
    (System/exit exit-code)  )
 
+(defmacro timer-wrapper
+   [block]
+   `(let
+      [  before# (System/nanoTime)  ]
+      (let
+         [  ret# ~block  ]
+         [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )  )
+
 (defn http-get ; footnote 1
    [url]
    (let
