@@ -48,10 +48,8 @@
 (defn http-get ; footnote 1
    [url]
    (let
-      [  before (System/nanoTime)
-         after #(System/nanoTime)  ]
-      (let
-         [  {status :status body :body}
+      [  [  duration {status :status body :body}  ]
+            (timer-wrapper
                (try
                   (clj-http.client/get url
                      {  :insecure? true
@@ -63,12 +61,11 @@
                   (catch              java.net.SocketTimeoutException e
                      {:body "" :status "socket timed-out"}  )
                   (catch org.apache.http.conn.ConnectTimeoutException e
-                     {:body "" :status "connection timed-out"}  )  )  ]
-         (let
-            [  duration (/ (- (after) before) 1e6)
-               message
-                  (format "response returned by %s in %s ms" url duration)  ]
-            [  status body message  ]  )  )  )  )
+                     {:body "" :status "connection timed-out"}  )  )  )  ]
+      (let
+         [  message
+               (format "response returned by %s in %s ms" url duration)  ]
+         [  status body message  ]  )  )  )
 
 (defn load-index ; footnote 2
    [state]
