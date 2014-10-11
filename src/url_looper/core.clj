@@ -11,7 +11,7 @@
    [  [  "-d"
          "--delta INT"
          "delta - seconds to wait between attempts"
-         :parse-fn #(Integer/parseInt %)
+         :parse-fn #(* 1000 (Integer/parseInt %))
          :validate [integer? "not an integer"]
          :default 60  ]
       [  "-s"
@@ -44,15 +44,15 @@
       [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )
 
 (defn http-get
-   [url]
+   [url delta]
    (let
       [  [  duration {status :status body :body}  ]
          (timer-wrapper
             (try
                (clj-http.client/get url
-                  {  :insecure? true
-                     :socket-timeout 10000
-                     :conn-timeout    1000
+                  {  :insecure?         true
+                     :socket-timeout   10000
+                     :conn-timeout      1000
                      :throw-exceptions false  }  )
                (catch                    java.net.ConnectException e
                   {:body "" :status "connection failed"}  )
@@ -60,8 +60,9 @@
                   {:body "" :status "socket timed-out"}  )
                (catch org.apache.http.conn.ConnectTimeoutException e
                   {:body "" :status "connection timed-out"}  )  )  )
+         remaining (- delta duration)
          message (format "response returned by %s in %s ms" url duration)  ]
-      [  status body message  ]  )  )
+      [  status body (if (< remaining 0) 0 remaining) message  ]  )  )
 
 (defn load-index ; footnote 2
    [state]
@@ -89,10 +90,10 @@
          url delta state  )  )
    (letfn
       [  (fetch-and-compare
-            [index milliseconds]
+            [  [index milliseconds]  ]
             (Thread/sleep milliseconds)
             (let
-               [  [status body message] (http-get url)  ]
+               [  [status body remaining message] (http-get url delta)  ]
                (if
                   (not (= status 200))
                   (do
@@ -100,23 +101,27 @@
                         (format
                            "invalid (%s) %s - keeping last known good state"
                            status message  )  )
-                     index  )
+                     [index remaining]  )
                   (let
-                     [  oldmd5 (get index url) newmd5 (digest/md5 body)  ]
+                     [  oldmd5 (get index url)
+                        newmd5 (digest/md5 body)  ]
                      (if
                         (= newmd5 oldmd5)
-                        (do (log/info (format "unchanged %s" message)) index)
+                        (do
+                           (log/info (format "unchanged %s" message))
+                           [index remaining]  )
                         (let
                            [  new-index (assoc index url newmd5)  ]
                            (spit (str state "/" newmd5 ".out") body)
                            (save-index (str state "/index.txt") new-index)
                            (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                            (log/info (format "different %s" message))
-                           new-index  )  )  )  )  )  )  ]
+                           [new-index remaining]  )  )  )  )  )  )  ]
       (loop
-         [  index (load-index (str state "/index.txt"))
-            milliseconds (* 1000 delta)  ]
-         (recur (fetch-and-compare index milliseconds) milliseconds)  )  )  )
+         [  args
+            [  (load-index (str state "/index.txt"))
+               (int (rand delta))  ]  ]
+         (recur (fetch-and-compare args))  )  )  )
 
 (defn -main
    [& args]
