@@ -13,7 +13,8 @@
          "delta - seconds to wait between attempts"
          :parse-fn #(* 1000 (Integer/parseInt %))
          :validate [integer? "not an integer"]
-         :default 60  ]
+         :default 60000
+         :default-desc "60"  ]
       [  "-s"
          "--state PATH"
          "the directory in which to keep state"
