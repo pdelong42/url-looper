@@ -50,9 +50,9 @@
                         :socket-timeout 10000
                         :conn-timeout    1000
                         :throw-exceptions false  }  )
-                  (catch java.net.ConnectException e
+                  (catch                    java.net.ConnectException e
                      {:body "" :status "connection failed"}  )
-                  (catch java.net.SocketTimeoutException e
+                  (catch              java.net.SocketTimeoutException e
                      {:body "" :status "socket timed-out"}  )
                   (catch org.apache.http.conn.ConnectTimeoutException e
                      {:body "" :status "connection timed-out"}  )  )  ]
@@ -63,21 +63,19 @@
             [  status body message  ]  )  )  )  )
 
 (defn load-index ; footnote 2
-   [directory]
+   [state]
    (try
       (into
          {}
          (map
            #(vec (reverse (split % #"\s+" 2)))
-            (split-lines (slurp (str directory "/index.txt")))  )  )
+            (split-lines (slurp state))  )  )
       (catch java.io.FileNotFoundException e {})
       (catch      IllegalArgumentException e {})  )  )
 
 (defn save-index ; footnote 2
-   [directory index]
-   (spit
-      (str directory "/index.txt")
-      (join (sort (map #(str (join " " (reverse %)) "\n") index)))  )  )
+   [state index]
+   (spit state (join (sort (map #(str (join " " (reverse %)) "\n") index)))))
 
 (defn main-loop
    [  {  {  :keys [delta state help url]  } :options
@@ -110,12 +108,12 @@
                         (let
                            [  new-index (assoc index url newmd5)  ]
                            (spit (str state "/" newmd5 ".out") body)
-                           (save-index state new-index)
+                           (save-index (str state "/index.txt") new-index)
                            (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                            (log/info (format "different %s" message))
                            new-index  )  )  )  )  )  )  ]
       (loop
-         [  index (load-index state)
+         [  index (load-index (str state "/index.txt"))
             milliseconds (* 1000 delta)  ]
          (recur (fetch-and-compare index milliseconds) milliseconds)  )  )  )
 
