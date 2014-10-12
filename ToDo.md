@@ -28,3 +28,5 @@
  - [ ] revamp the logging framework to use something more flexible;
  - [ ] find-out why :request-time is so much smaller than the measured time (is
        the overhead really that high?);
+ - [ ] parameterize the request timeout values, instead of having them set to
+       the current hard-coded values;
