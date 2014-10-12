@@ -90,7 +90,7 @@
          "fetching %s every %s seconds, keeping state across runs in %s"
          url delta state  )  )
    (letfn
-      [  (fetch-and-compare
+      [  (fetch-and-compare ; footnote 1
             [  [index milliseconds]  ]
             (Thread/sleep milliseconds)
             (let
@@ -130,7 +130,9 @@
 
 ; Footnote 1:
 ;
-; (placeholder)
+; Now I remember why I did this (why I created fetch-and-compare) - it
+; was an attempt to prepare the code for adding the support of
+; checking multiple URLs concurrently (which should be soonish).
 ;
 ; Footnote 2:
 ;
