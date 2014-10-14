@@ -30,3 +30,5 @@
        the overhead really that high?);
  - [ ] parameterize the request timeout values, instead of having them set to
        the current hard-coded values;
+ - [ ] find-out if log4j is already thread-safe (probably) or if I need to wrap
+       it in agent abstractions as a precaution;
