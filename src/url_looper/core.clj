@@ -91,7 +91,7 @@
          url delta state  )  )
    (letfn
       [  (fetch-and-compare ; footnote 1
-            [  [index milliseconds]  ]
+            [index milliseconds]
             (Thread/sleep milliseconds)
             (let
                [  [status body remaining message] (http-get url delta)  ]
@@ -102,7 +102,7 @@
                         (format
                            "invalid (%s) %s - keeping last known good state"
                            status message  )  )
-                     [index remaining]  )
+                     (recur index remaining)  )
                   (let
                      [  oldmd5 (get index url)
                         newmd5 (digest/md5 body)  ]
@@ -110,19 +110,17 @@
                         (= newmd5 oldmd5)
                         (do
                            (log/info (format "unchanged %s" message))
-                           [index remaining]  )
+                           (recur index remaining)  )
                         (let
                            [  new-index (assoc index url newmd5)  ]
                            (spit (str state "/" newmd5 ".out") body)
                            (save-index (str state "/index.txt") new-index)
                            (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                            (log/info (format "different %s" message))
-                           [new-index remaining]  )  )  )  )  )  )  ]
-      (loop
-         [  args
-            [  (load-index (str state "/index.txt"))
-               (int (rand delta))  ]  ]
-         (recur (fetch-and-compare args))  )  )  )
+                           (recur new-index remaining)  )  )  )  )  )  )  ]
+      (fetch-and-compare
+         (load-index (str state "/index.txt"))
+         (int (rand delta))  )  )  )
 
 (defn -main
    [& args]
