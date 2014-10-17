@@ -94,7 +94,7 @@
    (log/info
       (format
          "fetching %s every %s seconds, keeping state across runs in %s"
-         url delta state  )  )
+         url (/ delta 1000) state  )  )
    (letfn
       [  (fetch-and-compare ; footnote 1
             [index milliseconds]
