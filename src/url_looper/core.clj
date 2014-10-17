@@ -15,9 +15,9 @@
          :validate [integer? "not an integer"]
          :default 60000
          :default-desc "60"  ]
-      [  "-s"
-         "--state PATH"
-         "the directory in which to keep state"
+      [  "-l"
+         "--logs PATH"
+         "the directory in which to keep state and history"
          :default "log"  ]
       [  "-u"
          "--url URL"
@@ -87,17 +87,15 @@
       (spit filename (join (sort (map swap-n-cat (into index pair)))))  )  )
 
 (defn main-loop
-   [  {  {  :keys [delta state help url]  } :options
+   [  {  {  :keys [delta logs help url]  } :options
          :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info
-      (format
-         "fetching %s every %s seconds, keeping state across runs in %s"
-         url (/ delta 1000) state  )  )
+   (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
+   (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (letfn
       [  (fetch-and-compare ; footnote 1
-            [index milliseconds]
+            [state milliseconds]
             (Thread/sleep milliseconds)
             (let
                [  [status body remaining message] (http-get url delta)  ]
@@ -108,24 +106,24 @@
                         (format
                            "invalid (%s) %s - keeping last known good state"
                            status message  )  )
-                     (recur index remaining)  )
+                     (recur state remaining)  )
                   (let
-                     [  oldmd5 (get index url)
+                     [  oldmd5 (get (:index @state) url)
                         newmd5 (digest/md5 body)  ]
                      (if
                         (= newmd5 oldmd5)
                         (do
                            (log/info (format "unchanged %s" message))
-                           (recur index remaining)  )
+                           (recur state remaining)  )
                         (let
-                           [new-index (send-off index save-index {url newmd5})]
-                           (spit (str state "/" newmd5 ".out") body)
+                           [new-state (send-off state save-index {url newmd5})]
+                           (spit (str logs "/" newmd5 ".out") body)
                            (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                            (log/info  (format "different %s" message))
-                           (recur new-index remaining)  )  )  )  )  )  )  ]
+                           (recur new-state remaining)  )  )  )  )  )  )  ]
       (let
-         [index (agent (load-index (str state "/index.txt")))]
-         (fetch-and-compare index (int (rand delta)))  )  )  )
+         [state (agent (load-index (str logs "/index.txt")))]
+         (fetch-and-compare state (int (rand delta)))  )  )  )
 
 (defn -main
    [& args]
