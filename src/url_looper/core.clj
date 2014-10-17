@@ -25,6 +25,12 @@
          :default "http://localhost:8080/"  ]
       [  "-h" "--help" "help"  ]  ]  )
 
+(defmacro timer-wrapper
+   [block]
+  `(let
+      [  before# (System/nanoTime) ret# ~block  ]
+      [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )
+
 (defn usage
    [exit-code options-summary & [error-msg]]
    (if error-msg (println error-msg "\n"))
@@ -37,12 +43,6 @@
             "Options: (with defaults indicated)"
             options-summary  ]  )  )
    (System/exit exit-code)  )
-
-(defmacro timer-wrapper
-   [block]
-  `(let
-      [  before# (System/nanoTime) ret# ~block  ]
-      [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )
 
 (defn http-get
    [url delta]
@@ -65,20 +65,26 @@
          message (format "response returned by %s in %s ms" url duration)  ]
       [  status body (if (< remaining 0) 0 remaining) message  ]  )  )
 
-(defn load-index ; footnote 2
-   [state]
-   (try
-      (into
-         {}
-         (map
-           #(vec (reverse (split % #"\s+" 2)))
-            (split-lines (slurp state))  )  )
-      (catch java.io.FileNotFoundException e {})
-      (catch      IllegalArgumentException e {})  )  )
+(defn load-index
+   [index-file]
+   {  :filename index-file
+      :index
+      (try
+         (into
+            {}
+            (map
+              #(vec (reverse (split % #"\s+" 2)))
+               (split-lines (slurp index-file))  )  )
+         (catch java.io.FileNotFoundException e {})
+         (catch      IllegalArgumentException e {})  )  }  )
 
-(defn save-index ; footnote 2
-   [state index]
-   (spit state (join (sort (map #(str (join " " (reverse %)) "\n") index)))))
+(defn save-index
+   [state pair]
+   (let
+      [  filename (:filename state)
+         index    (:index    state)
+         swap-n-cat #(str (join " " (reverse %)) "\n")  ]
+      (spit filename (join (sort (map swap-n-cat (into index pair)))))  )  )
 
 (defn main-loop
    [  {  {  :keys [delta state help url]  } :options
@@ -112,15 +118,14 @@
                            (log/info (format "unchanged %s" message))
                            (recur index remaining)  )
                         (let
-                           [  new-index (assoc index url newmd5)  ]
+                           [new-index (send-off index save-index {url newmd5})]
                            (spit (str state "/" newmd5 ".out") body)
-                           (save-index (str state "/index.txt") new-index)
                            (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
-                           (log/info (format "different %s" message))
+                           (log/info  (format "different %s" message))
                            (recur new-index remaining)  )  )  )  )  )  )  ]
-      (fetch-and-compare
-         (load-index (str state "/index.txt"))
-         (int (rand delta))  )  )  )
+      (let
+         [index (agent (load-index (str state "/index.txt")))]
+         (fetch-and-compare index (int (rand delta)))  )  )  )
 
 (defn -main
    [& args]
@@ -131,11 +136,3 @@
 ; Now I remember why I did this (why I created fetch-and-compare) - it
 ; was an attempt to prepare the code for adding the support of
 ; checking multiple URLs concurrently (which should be soonish).
-;
-; Footnote 2:
-;
-; Instead of passing in the directory argument each time, I should
-; pass it in to a partially evaluated function, which I create at the
-; beginning of the flow of execution.  Then evoke the partially
-; evaluated function each time, with the rest of the args.  Another
-; todo item...
