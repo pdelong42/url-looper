@@ -117,12 +117,13 @@
                         (do
                            (log/info (format "unchanged %s" message))
                            (recur state remaining)  )
-                        (let
-                           [new-state (send-off state save-index {url newmd5})]
+                        (do
                            (spit (str logs "/" newmd5 ".out") body)
                            (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                            (log/info  (format "different %s" message))
-                           (recur new-state remaining)  )  )  )  )  )  )  ]
+                           (recur
+                              (send-off state save-index {url newmd5})
+                              remaining  )  )  )  )  )  )  )  ]
       (let
          [state (agent (load-index (str logs "/index.txt")))]
          (fetch-and-compare state (int (rand delta)))  )  )  )
