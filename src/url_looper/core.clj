@@ -88,6 +88,37 @@
       {  :filename filename
          :index    index  }  )  )
 
+(defn process-url
+   [url delta logs]
+   (fn
+      [state milliseconds]
+      (Thread/sleep milliseconds)
+      (let
+         [  [status body remaining message] (http-get url delta)  ]
+         (if
+            (not (= status 200))
+            (do
+               (log/info
+                  (format
+                     "invalid (%s) %s - keeping last known good state"
+                     status message  )  )
+               (recur state remaining)  )
+            (let
+               [  oldmd5 (get (:index @state) url)
+                  newmd5 (digest/md5 body)  ]
+               (if
+                  (= newmd5 oldmd5)
+                  (do
+                     (log/info (format "unchanged %s" message))
+                     (recur state remaining)  )
+                  (do
+                     (log/info  (format "different %s" message))
+                     (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
+                     (spit (str logs "/" newmd5 ".out") body)
+                     (recur
+                        (send-off state save-index {url newmd5})
+                        remaining  )  )  )  )  )  )  )  )
+
 (defn main-loop
    [  {  {  :keys [delta logs help url]  } :options
          :keys [arguments errors summary]  }  ]
@@ -95,35 +126,8 @@
    (if errors (usage 1 summary errors))
    (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
-   (letfn
-      [  (fetch-and-compare ; footnote 1
-            [state milliseconds]
-            (Thread/sleep milliseconds)
-            (let
-               [  [status body remaining message] (http-get url delta)  ]
-               (if
-                  (not (= status 200))
-                  (do
-                     (log/info
-                        (format
-                           "invalid (%s) %s - keeping last known good state"
-                           status message  )  )
-                     (recur state remaining)  )
-                  (let
-                     [  oldmd5 (get (:index @state) url)
-                        newmd5 (digest/md5 body)  ]
-                     (if
-                        (= newmd5 oldmd5)
-                        (do
-                           (log/info (format "unchanged %s" message))
-                           (recur state remaining)  )
-                        (do
-                           (log/info  (format "different %s" message))
-                           (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
-                           (spit (str logs "/" newmd5 ".out") body)
-                           (recur
-                              (send-off state save-index {url newmd5})
-                              remaining  )  )  )  )  )  )  )  ]
+   (let
+      [  fetch-and-compare (process-url url delta logs)  ]
       (fetch-and-compare
          (agent (load-index (str logs "/index.txt")))
          (int (rand delta))  )  )  )
