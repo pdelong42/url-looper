@@ -82,9 +82,11 @@
    [state pair]
    (let
       [  filename (:filename state)
-         index    (:index    state)
+         index    (into (:index state) pair)
          swap-n-cat #(str (join " " (reverse %)) "\n")  ]
-      (spit filename (join (sort (map swap-n-cat (into index pair)))))  )  )
+      (spit filename (join (sort (map swap-n-cat index))))
+      {  :filename filename
+         :index    index  }  )  )
 
 (defn main-loop
    [  {  {  :keys [delta logs help url]  } :options
