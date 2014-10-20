@@ -66,15 +66,15 @@
       [  status body (if (< remaining 0) 0 remaining) message  ]  )  )
 
 (defn load-index
-   [index-file]
-   {  :filename index-file
+   [filename]
+   {  :filename filename
       :index
       (try
          (into
             {}
             (map
               #(vec (reverse (split % #"\s+" 2)))
-               (split-lines (slurp index-file))  )  )
+               (split-lines (slurp filename))  )  )
          (catch java.io.FileNotFoundException e {})
          (catch      IllegalArgumentException e {})  )  }  )
 
