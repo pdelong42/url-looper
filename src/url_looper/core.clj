@@ -79,10 +79,10 @@
          (catch      IllegalArgumentException e {})  )  }  )
 
 (defn save-index
-   [state pair]
+   [state url md5]
    (let
       [  filename (:filename state)
-         index    (into (:index state) pair)
+         index    (into (:index state) {url md5})
          swap-n-cat #(str (join " " (reverse %)) "\n")  ]
       (spit filename (join (sort (map swap-n-cat index))))
       {  :filename filename
@@ -106,18 +106,17 @@
                         status message  )  )
                   (recur remaining)  )
                (let
-                  [  oldmd5 (get (:index @state) url)
-                     newmd5 (digest/md5 body)  ]
+                  [  md5 (digest/md5 body)  ]
                   (if
-                     (= newmd5 oldmd5)
+                     (= md5 (get (:index @state) url))
                      (do
                         (log/info (format "unchanged %s" message))
                         (recur remaining)  )
                      (do
                         (log/info  (format "different %s" message))
-                        (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
-                        (spit (str logs "/" newmd5 ".out") body)
-                        (send-off state save-index {url newmd5})
+                        (log/debug (format "new MD5 = %s" md5))
+                        (spit (str logs "/" md5 ".out") body)
+                        (send-off state save-index url md5)
                         (recur remaining)  )  )  )  )  )  )  )  )
 
 (defn main-loop
