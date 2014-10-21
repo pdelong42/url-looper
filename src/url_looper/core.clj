@@ -89,9 +89,9 @@
          :index    index  }  )  )
 
 (defn process-url
-   [url delta logs]
+   [url delta logs state]
    (fn
-      [state milliseconds]
+      [milliseconds]
       (Thread/sleep milliseconds)
       (let
          [  [status body remaining message] (http-get url delta)  ]
@@ -102,7 +102,7 @@
                   (format
                      "invalid (%s) %s - keeping last known good state"
                      status message  )  )
-               (recur state remaining)  )
+               (recur remaining)  )
             (let
                [  oldmd5 (get (:index @state) url)
                   newmd5 (digest/md5 body)  ]
@@ -110,14 +110,13 @@
                   (= newmd5 oldmd5)
                   (do
                      (log/info (format "unchanged %s" message))
-                     (recur state remaining)  )
+                     (recur remaining)  )
                   (do
                      (log/info  (format "different %s" message))
                      (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
                      (spit (str logs "/" newmd5 ".out") body)
-                     (recur
-                        (send-off state save-index {url newmd5})
-                        remaining  )  )  )  )  )  )  )  )
+                     (send-off state save-index {url newmd5})
+                     (recur remaining)  )  )  )  )  )  )  )
 
 (defn main-loop
    [  {  {  :keys [delta logs help url]  } :options
@@ -126,11 +125,8 @@
    (if errors (usage 1 summary errors))
    (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
-   (let
-      [  fetch-and-compare (process-url url delta logs)  ]
-      (fetch-and-compare
-         (agent (load-index (str logs "/index.txt")))
-         (int (rand delta))  )  )  )
+   (  (process-url url delta logs (agent (load-index (str logs "/index.txt"))))
+      (int (rand delta))  )  )
 
 (defn -main
    [& args]
