@@ -135,9 +135,3 @@
 (defn -main
    [& args]
    (main-loop (parse-opts args cli-options))  )
-
-; Footnote 1:
-;
-; Now I remember why I did this (why I created fetch-and-compare) - it
-; was an attempt to prepare the code for adding the support of
-; checking multiple URLs concurrently (which should be soonish).
