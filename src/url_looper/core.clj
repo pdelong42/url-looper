@@ -130,7 +130,12 @@
       [  state (agent (load-index (str logs "/index.txt")))
          url-processor (make-url-processor delta logs state)
          process-url (url-processor url)  ]
-      (process-url (int (rand delta)))  )  )
+      (pmap
+         (fn [x]
+            (let
+               [process-url (url-processor x)]
+               (process-url (int (rand delta)))  )  )
+         (keys (:index @state))  )  )  )
 
 (defn -main
    [& args]
