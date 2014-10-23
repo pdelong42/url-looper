@@ -127,8 +127,7 @@
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
       [  state (agent (load-index (str logs "/index.txt")))
-         url-processor (make-url-processor delta logs state)
-         process-url (url-processor url)  ]
+         url-processor (make-url-processor delta logs state)  ]
       (pmap
          (fn [x]
             (let
