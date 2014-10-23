@@ -119,6 +119,15 @@
                         (send-off state save-index url md5)
                         (recur remaining)  )  )  )  )  )  )  )  )
 
+(defn make-thread-launcher
+   [url-processor delta]
+   (fn
+      [url]
+      (let
+         [process-url (url-processor url)]
+         (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
+         (process-url (int (rand delta)))  )  )  )
+
 (defn main-loop
    [  {  {  :keys [delta logs help url]  } :options
          :keys [arguments errors summary]  }  ]
@@ -127,15 +136,9 @@
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
       [  state (agent (load-index (str logs "/index.txt")))
-         url-processor (make-url-processor delta logs state)  ]
-      (pmap
-         (fn [x]
-            (let
-               [process-url (url-processor x)]
-               (log/info
-                  (format "fetching %s every %s seconds" x (/ delta 1000))  )
-               (process-url (int (rand delta)))  )  )
-         (keys (:index @state))  )  )  )
+         url-processor (make-url-processor delta logs state)
+         thread-launcher (make-thread-launcher url-processor delta)  ]
+      (pmap thread-launcher (keys (:index @state)))  )  )
 
 (defn -main
    [& args]
