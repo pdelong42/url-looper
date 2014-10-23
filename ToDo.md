@@ -3,6 +3,7 @@
    - considered - I can't think of a good reason to do this;
  - [ ] add an option (-N) for specifying a Nagios command pipe to write to...;
    - ...but only if we can establish a coherent use case for this;
+   - describe how the use-case would work;
  - [X] put in a usage / help message;
    - [X] add a usage function, which auto-generates the options
    - [X] finish filling-in the usage message
@@ -35,3 +36,4 @@
  - [ ] The arg processing and merging is really broken.  Need to fix.
        I didn't finally realize this until I started adding support
        for checking multiple URLs concurrently.
+ - [ ] update the README to reflect the latest feature additions;
