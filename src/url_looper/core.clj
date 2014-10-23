@@ -124,7 +124,6 @@
          :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
       [  state (agent (load-index (str logs "/index.txt")))
@@ -134,6 +133,8 @@
          (fn [x]
             (let
                [process-url (url-processor x)]
+               (log/info
+                  (format "fetching %s every %s seconds" x (/ delta 1000))  )
                (process-url (int (rand delta)))  )  )
          (keys (:index @state))  )  )  )
 
