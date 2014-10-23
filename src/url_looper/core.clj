@@ -119,10 +119,6 @@
                         (send-off state save-index url md5)
                         (recur remaining)  )  )  )  )  )  )  )  )
 
-; ToDo: The arg processing and merging is really broken.  Need to fix.
-; I didn't finally realize this until I started adding support for
-; checking multiple URLs concurrently.
-
 (defn main-loop
    [  {  {  :keys [delta logs help url]  } :options
          :keys [arguments errors summary]  }  ]

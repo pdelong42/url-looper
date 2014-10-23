@@ -32,3 +32,6 @@
        the current hard-coded values;
  - [ ] find-out if log4j is already thread-safe (probably) or if I need to wrap
        it in agent abstractions as a precaution;
+ - [ ] The arg processing and merging is really broken.  Need to fix.
+       I didn't finally realize this until I started adding support
+       for checking multiple URLs concurrently.
