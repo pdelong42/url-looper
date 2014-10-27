@@ -21,8 +21,7 @@
          :default "log"  ]
       [  "-u"
          "--url URL"
-         "the URL to fetch"
-         :default "http://localhost:8080/"  ]
+         "the URL to fetch"  ]
       [  "-h" "--help" "help"  ]  ]  )
 
 (defmacro timer-wrapper
@@ -65,18 +64,25 @@
          message (format "response returned by %s in %s ms" url duration)  ]
       [  status body (if (< remaining 0) 0 remaining) message  ]  )  )
 
+(defn merge-from-file
+   [filename index]
+   (try
+      (into index
+         (map
+           #(vec (reverse (split % #"\s+" 2)))
+            (split-lines (slurp filename))  )  )
+      (catch java.io.FileNotFoundException e index)
+      (catch      IllegalArgumentException e index)  )  )
+
 (defn load-index
-   [filename]
-   {  :filename filename
-      :index
-      (try
-         (into
-            {}
-            (map
-              #(vec (reverse (split % #"\s+" 2)))
-               (split-lines (slurp filename))  )  )
-         (catch java.io.FileNotFoundException e {})
-         (catch      IllegalArgumentException e {})  )  }  )
+   [filename & pairs]
+   (let
+      [  apply-default? #(into %2 (if (not (keys %2)) %))
+         index
+         (apply-default?
+            {"http://localhost:8080" ""}
+            (merge-from-file filename (into {} pairs))  )  ]
+      {  :filename filename :index index  }  )  )
 
 (defn save-index
    [state url md5]
@@ -85,8 +91,7 @@
          index    (into (:index state) {url md5})
          swap-n-cat #(str (join " " (reverse %)) "\n")  ]
       (spit filename (join (sort (map swap-n-cat index))))
-      {  :filename filename
-         :index    index  }  )  )
+      {  :filename filename :index index  }  )  )
 
 (defn make-url-processor
    [delta logs state]
@@ -119,23 +124,27 @@
                         (send-off state save-index url md5)
                         (recur remaining)  )  )  )  )  )  )  )  )
 
+(defn make-thread-launcher
+   [url-processor delta]
+   (fn
+      [url]
+      (let
+         [process-url (url-processor url)]
+         (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
+         (process-url (int (rand delta)))  )  )  )
+
 (defn main-loop
    [  {  {  :keys [delta logs help url]  } :options
          :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
-      [  state (agent (load-index (str logs "/index.txt")))
+      [  pair (if url {url ""})
+         state (agent (load-index (str logs "/index.txt") pair))
          url-processor (make-url-processor delta logs state)
-         process-url (url-processor url)  ]
-      (pmap
-         (fn [x]
-            (let
-               [process-url (url-processor x)]
-               (process-url (int (rand delta)))  )  )
-         (keys (:index @state))  )  )  )
+         thread-launcher (make-thread-launcher url-processor delta)  ]
+      (dorun (pmap thread-launcher (keys (:index @state))))  )  )
 
 (defn -main
    [& args]
