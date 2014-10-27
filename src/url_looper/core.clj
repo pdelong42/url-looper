@@ -89,10 +89,10 @@
       {  :filename filename :index index  }  )  )
 
 (defn save-index
-   [state url md5]
+   [state pairs]
    (let
       [  filename (:filename state)
-         index    (into (:index state) {url md5})
+         index    (into (:index state) pairs)
          swap-n-cat #(str (join " " (reverse %)) "\n")  ]
       (spit filename (join (sort (map swap-n-cat index))))
       {  :filename filename :index index  }  )  )
@@ -125,7 +125,7 @@
                         (log/info  (format "different %s" message))
                         (log/debug (format "new MD5 = %s" md5))
                         (spit (str logs "/" md5 ".out") body)
-                        (send-off state save-index url md5)
+                        (send-off state save-index {url md5})
                         (recur remaining)  )  )  )  )  )  )  )  )
 
 (defn make-thread-launcher
