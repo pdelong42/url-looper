@@ -15,6 +15,10 @@
          :validate [integer? "not an integer"]
          :default 60000
          :default-desc "60"  ]
+      [  "-s"
+         "--state PATH"
+         "the directory in which to keep state"
+         :id :legacy-logs  ]
       [  "-l"
          "--logs PATH"
          "the directory in which to keep state and history"
@@ -134,16 +138,17 @@
          (process-url (int (rand delta)))  )  )  )
 
 (defn main-loop
-   [  {  {  :keys [delta logs help url]  } :options
+   [  {  {  :keys [delta logs help url legacy-logs]  } :options
          :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
       [  pair (if url {url ""})
-         state (agent (load-index (str logs "/index.txt") pair))
-         url-processor (make-url-processor delta logs state)
+         tmp (if legacy-logs legacy-logs logs)
+         state (agent (load-index (str tmp "/index.txt") pair))
+         url-processor (make-url-processor delta tmp state)
          thread-launcher (make-thread-launcher url-processor delta)  ]
+      (log/info (format "keeping state across runs and history in \"%s\"" tmp))
       (dorun (pmap thread-launcher (keys (:index @state))))  )  )
 
 (defn -main
