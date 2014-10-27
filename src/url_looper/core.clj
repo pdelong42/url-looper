@@ -107,7 +107,7 @@
          (let
             [  [status body remaining message] (http-get url delta)  ]
             (if
-               (not (= status 200))
+               (not= status 200)
                (do
                   (log/info
                      (format
