@@ -140,7 +140,8 @@
    (if errors (usage 1 summary errors))
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
-      [  state (agent (load-index (str logs "/index.txt") {url ""}))
+      [  pair (if url {url ""})
+         state (agent (load-index (str logs "/index.txt") pair))
          url-processor (make-url-processor delta logs state)
          thread-launcher (make-thread-launcher url-processor delta)  ]
       (dorun (pmap thread-launcher (keys (:index @state))))  )  )
