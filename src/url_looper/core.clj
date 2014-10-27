@@ -21,8 +21,7 @@
          :default "log"  ]
       [  "-u"
          "--url URL"
-         "the URL to fetch"
-         :default "http://localhost:8080/"  ]
+         "the URL to fetch"  ]
       [  "-h" "--help" "help"  ]  ]  )
 
 (defmacro timer-wrapper
@@ -65,18 +64,25 @@
          message (format "response returned by %s in %s ms" url duration)  ]
       [  status body (if (< remaining 0) 0 remaining) message  ]  )  )
 
+(defn merge-from-file
+   [filename index]
+   (try
+      (into index
+         (map
+           #(vec (reverse (split % #"\s+" 2)))
+            (split-lines (slurp filename))  )  )
+      (catch java.io.FileNotFoundException e index)
+      (catch      IllegalArgumentException e index)  )  )
+
 (defn load-index
-   [filename]
-   {  :filename filename
-      :index
-      (try
-         (into
-            {}
-            (map
-              #(vec (reverse (split % #"\s+" 2)))
-               (split-lines (slurp filename))  )  )
-         (catch java.io.FileNotFoundException e {})
-         (catch      IllegalArgumentException e {})  )  }  )
+   [filename & pairs]
+   (let
+      [  apply-default? #(into %2 (if (not (keys %2)) %))
+         index
+         (apply-default?
+            {"http://localhost:8080" ""}
+            (merge-from-file filename (into {} pairs))  )  ]
+      {  :filename filename :index index  }  )  )
 
 (defn save-index
    [state url md5]
@@ -85,8 +91,7 @@
          index    (into (:index state) {url md5})
          swap-n-cat #(str (join " " (reverse %)) "\n")  ]
       (spit filename (join (sort (map swap-n-cat index))))
-      {  :filename filename
-         :index    index  }  )  )
+      {  :filename filename :index index  }  )  )
 
 (defn make-url-processor
    [delta logs state]
@@ -135,10 +140,10 @@
    (if errors (usage 1 summary errors))
    (log/info (format "keeping state across runs and history in \"%s\"" logs))
    (let
-      [  state (agent (load-index (str logs "/index.txt")))
+      [  state (agent (load-index (str logs "/index.txt") {url ""}))
          url-processor (make-url-processor delta logs state)
          thread-launcher (make-thread-launcher url-processor delta)  ]
-      (pmap thread-launcher (keys (:index @state)))  )  )
+      (dorun (pmap thread-launcher (keys (:index @state))))  )  )
 
 (defn -main
    [& args]
