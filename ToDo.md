@@ -37,3 +37,11 @@
        I didn't finally realize this until I started adding support
        for checking multiple URLs concurrently.
  - [ ] update the README to reflect the latest feature additions;
+ - [ ] see if log4j will let us change the name logged to be something
+       besides the thread-pool ID (say, using a prefix);
+ - [ ] revert the -l option back to -s for compatibility, and to not break
+       semver;
+ - [ ] produce some ancillary documentation explaining the rationale behind the
+       options merging;
+ - [ ] produce some ancillary documentation explaining use-cases for Splunk and
+       Nagios;
