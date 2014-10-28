@@ -18,12 +18,21 @@
       [  "-s"
          "--state PATH"
          "the directory in which to keep state"
+         :id :legacy-logs  ]
+      [  "-l"
+         "--logs PATH"
+         "the directory in which to keep state and history"
          :default "log"  ]
       [  "-u"
          "--url URL"
-         "the URL to fetch"
-         :default "http://localhost:8080/"  ]
+         "the URL to fetch"  ]
       [  "-h" "--help" "help"  ]  ]  )
+
+(defmacro timer-wrapper
+   [block]
+  `(let
+      [  before# (System/nanoTime) ret# ~block  ]
+      [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )
 
 (defn usage
    [exit-code options-summary & [error-msg]]
@@ -37,12 +46,6 @@
             "Options: (with defaults indicated)"
             options-summary  ]  )  )
    (System/exit exit-code)  )
-
-(defmacro timer-wrapper
-   [block]
-  `(let
-      [  before# (System/nanoTime) ret# ~block  ]
-      [  (/ (- (System/nanoTime) before#) 1e6) ret#  ]  )  )
 
 (defn http-get
    [url delta]
@@ -65,77 +68,89 @@
          message (format "response returned by %s in %s ms" url duration)  ]
       [  status body (if (< remaining 0) 0 remaining) message  ]  )  )
 
-(defn load-index ; footnote 2
-   [state]
+(defn merge-from-file
+   [filename index]
    (try
-      (into
-         {}
+      (into index
          (map
            #(vec (reverse (split % #"\s+" 2)))
-            (split-lines (slurp state))  )  )
-      (catch java.io.FileNotFoundException e {})
-      (catch      IllegalArgumentException e {})  )  )
+            (split-lines (slurp filename))  )  )
+      (catch java.io.FileNotFoundException e index)
+      (catch      IllegalArgumentException e index)  )  )
 
-(defn save-index ; footnote 2
-   [state index]
-   (spit state (join (sort (map #(str (join " " (reverse %)) "\n") index)))))
+(defn load-index
+   [filename & pairs]
+   (let
+      [  apply-default? #(into %2 (if (not (keys %2)) %))
+         index
+         (apply-default?
+            {"http://localhost:8080" ""}
+            (merge-from-file filename (into {} pairs))  )  ]
+      {  :filename filename :index index  }  )  )
+
+(defn save-index
+   [state pairs]
+   (let
+      [  filename (:filename state)
+         index    (into (:index state) pairs)
+         swap-n-cat #(str (join " " (reverse %)) "\n")  ]
+      (spit filename (join (sort (map swap-n-cat index))))
+      {  :filename filename :index index  }  )  )
+
+(defn make-url-processor
+   [delta logs state]
+   (fn
+      [url]
+      (fn
+         [milliseconds]
+         (Thread/sleep milliseconds)
+         (let
+            [  [status body remaining message] (http-get url delta)  ]
+            (if
+               (not= status 200)
+               (do
+                  (log/info
+                     (format
+                        "invalid (%s) %s - keeping last known good state"
+                        status message  )  )
+                  (recur remaining)  )
+               (let
+                  [  md5 (digest/md5 body)  ]
+                  (if
+                     (= md5 (get (:index @state) url))
+                     (do
+                        (log/info (format "unchanged %s" message))
+                        (recur remaining)  )
+                     (do
+                        (log/info  (format "different %s" message))
+                        (log/debug (format "new MD5 = %s" md5))
+                        (spit (str logs "/" md5 ".out") body)
+                        (send-off state save-index {url md5})
+                        (recur remaining)  )  )  )  )  )  )  )  )
+
+(defn make-thread-launcher
+   [url-processor delta]
+   (fn
+      [url]
+      (let
+         [process-url (url-processor url)]
+         (log/info (format "fetching %s every %s seconds" url (/ delta 1000)))
+         (process-url (int (rand delta)))  )  )  )
 
 (defn main-loop
-   [  {  {  :keys [delta state help url]  } :options
+   [  {  {  :keys [delta logs help url legacy-logs]  } :options
          :keys [arguments errors summary]  }  ]
    (if help   (usage 0 summary errors))
    (if errors (usage 1 summary errors))
-   (log/info
-      (format
-         "fetching %s every %s seconds, keeping state across runs in %s"
-         url (/ delta 1000) state  )  )
-   (letfn
-      [  (fetch-and-compare ; footnote 1
-            [index milliseconds]
-            (Thread/sleep milliseconds)
-            (let
-               [  [status body remaining message] (http-get url delta)  ]
-               (if
-                  (not (= status 200))
-                  (do
-                     (log/info
-                        (format
-                           "invalid (%s) %s - keeping last known good state"
-                           status message  )  )
-                     (recur index remaining)  )
-                  (let
-                     [  oldmd5 (get index url)
-                        newmd5 (digest/md5 body)  ]
-                     (if
-                        (= newmd5 oldmd5)
-                        (do
-                           (log/info (format "unchanged %s" message))
-                           (recur index remaining)  )
-                        (let
-                           [  new-index (assoc index url newmd5)  ]
-                           (spit (str state "/" newmd5 ".out") body)
-                           (save-index (str state "/index.txt") new-index)
-                           (log/debug (format "MD5: %s -> %s" oldmd5 newmd5))
-                           (log/info (format "different %s" message))
-                           (recur new-index remaining)  )  )  )  )  )  )  ]
-      (fetch-and-compare
-         (load-index (str state "/index.txt"))
-         (int (rand delta))  )  )  )
+   (let
+      [  pair (if url {url ""})
+         tmp (if legacy-logs legacy-logs logs)
+         state (agent (load-index (str tmp "/index.txt") pair))
+         url-processor (make-url-processor delta tmp state)
+         thread-launcher (make-thread-launcher url-processor delta)  ]
+      (log/info (format "keeping state across runs and history in \"%s\"" tmp))
+      (dorun (pmap thread-launcher (keys (:index @state))))  )  )
 
 (defn -main
    [& args]
    (main-loop (parse-opts args cli-options))  )
-
-; Footnote 1:
-;
-; Now I remember why I did this (why I created fetch-and-compare) - it
-; was an attempt to prepare the code for adding the support of
-; checking multiple URLs concurrently (which should be soonish).
-;
-; Footnote 2:
-;
-; Instead of passing in the directory argument each time, I should
-; pass it in to a partially evaluated function, which I create at the
-; beginning of the flow of execution.  Then evoke the partially
-; evaluated function each time, with the rest of the args.  Another
-; todo item...
