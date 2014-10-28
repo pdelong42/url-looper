@@ -11,7 +11,7 @@ each run.
 
 This was written for two reasons: I wanted to scratch an itch - that is, I
 wanted to be able to monitor a service hosted for us by an external vendor; and
-I wanted an excuse to practice writing Clojure;
+I wanted an excuse to practice writing Clojure.
 
 I started this project over at bitbucket.org, and copied it over here when I
 realized I wanted to do "releases".  Unfortunately, I was unable to preserve
