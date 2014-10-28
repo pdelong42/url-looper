@@ -11,7 +11,7 @@ each run.
 
 This was written for two reasons: I wanted to scratch an itch - that is, I
 wanted to be able to monitor a service hosted for us by an external vendor; and
-I wanted an excuse to practice writing Clojure;
+I wanted an excuse to practice writing Clojure.
 
 I started this project over at bitbucket.org, and copied it over here when I
 realized I wanted to do "releases".  Unfortunately, I was unable to preserve
@@ -27,31 +27,13 @@ feel like writing the extra logic to handle redirects (though I suppose that I
 should, in the interests of my secondary goal, of getting more practice writing
 Clojure).  I figure that if you're checking a URL for changes, then you've
 already traced through all the redirects, and only care about the final
-endpoint.  Update: I think clj-http may follow redirects by default anyway.
-
-I stopped logging the MD5 hash and the filename, because those aren't really
-useful pieces of information from the point-of-view of a log-processing tool
-(e.g., Splunk).  I figure the URL is unique enough to disambiguate one run from
-another, if you're running more than one instance of this on the same host [1].
-The hash and filename may get logged again if I decide to add debug-level
-logging.  Update: it's now getting logged at debug-level.
-
-The only thing left ambiguous is when one would have more than one instance of
-this checking the same URL.  But I can't think of a good use case for that, so
-don't do it.
+endpoint.  I belive clj-http already follows redirects by default anyway.
 
 I should write an init script for this - it's on the ToDo list.  However, I see
 no point in writing a watchdog process.  Your monitoring system *is* your
 watchdog process, and this code checks-in regularly even when everything is
 okay.  If the heartbeat disappears, then your monitoring should notice, or it's
 not doing its job.
-
-[1] Idea for a future feature: since running more than one instance of this
-program (that is, more than one JVM) can add to memory pressure pretty quickly
-on a host, perhaps I should add the ability to check more than one URL
-concurrently.  This would also be a good excuse to get practice writing
-multithreaded code in Clojure.  If I decided to go in this direction, a config
-file would probably be better - command-line args would get unwieldy fast.
 
 ## Usage
 
