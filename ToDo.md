@@ -14,7 +14,8 @@
        in "./tmp");
  - [ ] write an init script;
    - I cheated - I disabled exception throwing for clj-http/get;
- - [ ] document possible outputs for the usage of external tool (e.g., Splunk);
+ - [ ] document possible outputs for the benefit of using an external tool
+       (e.g., Splunk);
  - [ ] work-out what it takes to use the `index.txt` file as a persistent
        configuration state across runs, while still honoring the command-line
        flags and their defaults in an intelligible way;
@@ -25,13 +26,13 @@
        the current hard-coded values;
  - [ ] find-out if log4j is already thread-safe (probably) or if I need to wrap
        it in agent abstractions as a precaution;
- - [ ] The arg processing and merging is really broken.  Need to fix.
+ - [X] The arg processing and merging is really broken.  Need to fix.
        I didn't finally realize this until I started adding support
        for checking multiple URLs concurrently.
  - [ ] update the README to reflect the latest feature additions;
  - [ ] see if log4j will let us change the name logged to be something
        besides the thread-pool ID (say, using a prefix);
- - [ ] revert the -l option back to -s for compatibility, and to not break
+ - [X] revert the -l option back to -s for compatibility, and to not break
        semver;
  - [ ] produce some ancillary documentation explaining the rationale behind the
        options merging;
