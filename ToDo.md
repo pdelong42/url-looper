@@ -37,3 +37,4 @@
        options merging;
  - [ ] produce some ancillary documentation explaining use-cases for Splunk and
        Nagios;
+ - [ ] decide on a consistent convention for using "str" vs. "format";
