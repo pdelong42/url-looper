@@ -45,3 +45,5 @@
  - [ ] decide on a consistent convention for using "str" vs. "format";
  - [ ] "load-index" and "save-index" should probably be more
        appropriately named "init-index" and "update-index";
+ - [ ] give this a new name with multiple segments in it - single-segment names
+       are bad mojo (see page 330 of the Clojure Programming book from O'Reilly)
