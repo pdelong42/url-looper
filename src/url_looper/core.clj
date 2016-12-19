@@ -58,6 +58,8 @@
                      :socket-timeout   10000
                      :conn-timeout      1000
                      :throw-exceptions false  }  )
+               (catch                java.net.UnknownHostException e
+                  {:body "" :status "DNS resolution failure"}  )
                (catch                    java.net.ConnectException e
                   {:body "" :status "connection failed"}  )
                (catch              java.net.SocketTimeoutException e
